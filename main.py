@@ -7,8 +7,13 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi .errors import RateLimitExceeded
 import os
+from fastapi.security import APIKeyHeader
+
 
 API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    raise RuntimeError("API_KEY environment variable is not set")
+
 
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
@@ -21,7 +26,7 @@ def health_check():
 
 
 @app.post("/remove-background/")
-@limiter.limit("5/minutes")
+@limiter.limit("5/minute")
 
 async def remove_background(request:Request ,file: UploadFile = File(...)):
     api_key = request.headers.get("x-api-key")
@@ -29,7 +34,7 @@ async def remove_background(request:Request ,file: UploadFile = File(...)):
         raise HTTPException(status_code=401, detail="invalid api key.")
 
           
-        if file.content_type not in ["image/jpeg", "image/png"]:
+    if file.content_type not in ["image/jpeg", "image/png"]:
             raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG are allowed.")
     
     try:
@@ -40,3 +45,4 @@ async def remove_background(request:Request ,file: UploadFile = File(...)):
         return StreamingResponse(io.BytesIO(output_image), media_type="image/png", headers={"Content-Disposition": "attachment; filename=result.png"})
     except Exception as e:
            raise HTTPException(status_code=500, detail="something went wrong while processing the image.")
+
