@@ -6,10 +6,9 @@ import io
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi .errors import RateLimitExceeded
+import os
 
-API_KEY = "mysecretkey123"
-
-
+API_KEY = os.getenv("API_KEY")
 
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
